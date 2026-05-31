@@ -11,11 +11,33 @@ import { startPrinter } from "./ui/printer.js";
 import { select, type SelectOption } from "./ui/select.js";
 import { createInput, type Input } from "./ui/input.js";
 import { startDashboard } from "./dashboard/server.js";
+import { replaySession } from "./replay.js";
 import { startSessionLog } from "./logging/session-log.js";
 import { killAllBackground } from "./tools/shells.js";
 
 async function main() {
   const cfg = loadConfig();
+
+  // 回放模式：glassbox --replay <session.jsonl> —— 不需要 key、不跑 agent，
+  // 只把一份录像重放到面板，用来无门槛体验"看 agent 工作"。
+  const replayIdx = process.argv.indexOf("--replay");
+  if (replayIdx !== -1) {
+    const file = process.argv[replayIdx + 1];
+    if (!file) {
+      console.error("用法: glassbox --replay <session.jsonl>");
+      process.exit(1);
+    }
+    startPrinter();
+    startDashboard(cfg.dashboardPort);
+    console.log(`\x1b[1mglassbox\x1b[0m \x1b[2m回放模式\x1b[0m`);
+    console.log(`\x1b[2m面板: http://127.0.0.1:${cfg.dashboardPort}  ·  录像: ${file}\x1b[0m\n`);
+    console.log(`\x1b[2m（先打开面板，3 秒后开始回放…）\x1b[0m`);
+    await new Promise((r) => setTimeout(r, 3000)); // 留时间打开浏览器
+    const n = await replaySession(file);
+    console.log(`\x1b[2m回放完成（${n} 个事件）。面板保持开启，Ctrl+C 退出。\x1b[0m`);
+    return; // dashboard 服务保持进程存活
+  }
+
   // 可变：/model 命令运行时切换。task 工具和 runLoop 都通过 getter/闭包读它。
   let activeProvider = makeProvider(cfg);
   const sysPrompt = systemPrompt(process.cwd());
@@ -77,7 +99,7 @@ async function main() {
 
   killAllBackground(); // 会话级清理：回收所有还在跑的后台进程，避免泄漏
   console.log(`\x1b[2m日志已保存: ${sessionLog.logPath}\x1b[0m`);
-  sessionLog.close();
+  await sessionLog.close(); // 等日志 flush 完再退出，别丢掉最后几条
   input.close();
   process.exit(0);
 }

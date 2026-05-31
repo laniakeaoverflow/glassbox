@@ -11,7 +11,7 @@ import type { AgentEvent } from "../events/types.js";
 export interface SessionLog {
   logPath: string;
   jsonlPath: string;
-  close: () => void;
+  close: () => Promise<void>;
 }
 
 export function logDir(): string {
@@ -42,11 +42,17 @@ export function startSessionLog(meta: { provider: string; model: string; cwd: st
   return {
     logPath,
     jsonlPath,
-    close: () => {
-      off();
-      log.end();
-      jsonl.end();
-    },
+    // 返回 Promise：等两个写流都 flush 完再 resolve，避免退出时丢掉最后几条（如 conversation_end）。
+    close: () =>
+      new Promise<void>((resolve) => {
+        off();
+        let pending = 2;
+        const done = () => {
+          if (--pending === 0) resolve();
+        };
+        log.end(done);
+        jsonl.end(done);
+      }),
   };
 }
 

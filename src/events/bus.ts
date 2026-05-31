@@ -23,6 +23,11 @@ class Bus {
     return full;
   }
 
+  /** 回放：直接广播一个已成形的事件（保留原始 id/ts，不重新打戳）。给 --replay 用。 */
+  replay(e: AgentEvent): void {
+    this.emitter.emit("event", e);
+  }
+
   on(fn: (e: AgentEvent) => void): () => void {
     this.emitter.on("event", fn);
     return () => this.emitter.off("event", fn);

@@ -10,7 +10,7 @@
 
 [![CI](https://github.com/laniakeaoverflow/glassbox/actions/workflows/ci.yml/badge.svg)](https://github.com/laniakeaoverflow/glassbox/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.2.0-58d3e8.svg)
+![Version](https://img.shields.io/badge/version-0.3.0-58d3e8.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Node%2020%2B-3178c6.svg)
 
 [快速上手](#-快速上手) · [面板看什么](#-面板能看到什么) · [工作原理](#-工作原理) · [English](README.md)
@@ -35,9 +35,23 @@
 
 ---
 
+## ▶️ 零门槛试玩 —— 不需要 API key
+
+想先看看面板长啥样、又不想注册任何东西？回放一份内置录像就行：
+
+```bash
+git clone https://github.com/laniakeaoverflow/glassbox.git && cd glassbox
+npm install
+npm run replay          # 然后打开 http://127.0.0.1:4100
+```
+
+它会把一段真实录制的会话重放进面板——点任意一次 LLM 调用就能看完整的输入/输出。无 key、零成本。
+
+---
+
 ## 🚀 快速上手
 
-> 没接触过？只需两样东西：**Node.js** 和**一个 API key**。约 3 分钟。
+> 想真正跑起来？只需两样东西：**Node.js** 和**一个 API key**。约 3 分钟。
 
 **1. 装 [Node.js 20+](https://nodejs.org/)**（如果还没有）。
 
@@ -99,7 +113,7 @@ npm run dev
 - [x] 检测被截断的工具调用 + 校验必填参数（不再写出垃圾文件）
 - [x] 上下文写满时自动压缩
 - [ ] 流式响应，面板逐 token 更新
-- [ ] 在面板里浏览历史会话日志
+- [x] 在面板里浏览/回放历史会话日志
 - [ ] 更多工具（网页抓取、apply-patch）
 
 欢迎贡献——挑上面任意一条，或开个 issue。点个 ⭐ 对项目帮助很大！

@@ -10,7 +10,7 @@ Most AI coding tools are black boxes. `glassbox` is the opposite: a ~1,000‑lin
 
 [![CI](https://github.com/laniakeaoverflow/glassbox/actions/workflows/ci.yml/badge.svg)](https://github.com/laniakeaoverflow/glassbox/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.2.0-58d3e8.svg)
+![Version](https://img.shields.io/badge/version-0.3.0-58d3e8.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Node%2020%2B-3178c6.svg)
 ![PRs welcome](https://img.shields.io/badge/PRs-welcome-bc8cff.svg)
 
@@ -37,9 +37,23 @@ Most AI coding tools are black boxes. `glassbox` is the opposite: a ~1,000‑lin
 
 ---
 
+## ▶️ Try it instantly — no API key
+
+Want to see the dashboard before signing up for anything? Replay a bundled recording:
+
+```bash
+git clone https://github.com/laniakeaoverflow/glassbox.git && cd glassbox
+npm install
+npm run replay          # then open http://127.0.0.1:4100
+```
+
+This plays back a real recorded session into the dashboard — click any LLM call to inspect its full input/output. No key, no cost.
+
+---
+
 ## 🚀 Quickstart
 
-> New to this? You only need two things: **Node.js** and **one API key**. ~3 minutes.
+> Ready to run it for real? You only need two things: **Node.js** and **one API key**. ~3 minutes.
 
 **1. Install [Node.js 20+](https://nodejs.org/)** (if you don't have it).
 
@@ -133,7 +147,7 @@ Run the tests (no key required): `npm test`.
 - [x] Detect truncated tool calls + validate required tool args (no more junk writes)
 - [x] Context compaction when the window fills up
 - [ ] Streaming responses for token‑by‑token dashboard updates
-- [ ] Browse past session logs in the dashboard
+- [x] Browse past session logs in the dashboard (replay)
 - [ ] More tools (web fetch, apply‑patch)
 
 Contributions welcome — pick anything above or open an issue. ⭐ a star helps a lot!

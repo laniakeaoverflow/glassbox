@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] — 2026-06-01
+
+### Added
+- **Session replay — try it with no API key.** `glassbox --replay <file.jsonl>` (or `npm run replay`) plays a recorded session back into the dashboard and terminal. A sample recording ships in `examples/`, so anyone can experience the dashboard instantly without signing up for a model provider.
+
+### Fixed
+- Session logs are now flushed before exit, so the final events (e.g. `conversation_end`) are no longer occasionally dropped.
+
 ## [0.2.0] — 2026-06-01
 
 ### Added
@@ -42,6 +50,7 @@ First public release. 🎉
 - Real-time **web dashboard** (SSE): conversation flow, per-call LLM details with full raw request/response, tool calls, context usage, multi-agent tree.
 - **Session logging**: every run recorded as a readable `.log` and a complete `.jsonl`.
 
+[0.3.0]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.3.0
 [0.2.0]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.2.0
 [0.1.1]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.1.1
 [0.1.0]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.1.0
