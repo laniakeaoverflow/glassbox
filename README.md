@@ -129,7 +129,7 @@ Run the tests (no key required): `npm test`.
 
 ## 🗺️ Roadmap
 
-- [ ] Detect truncated tool calls + validate required tool args (no more junk writes)
+- [x] Detect truncated tool calls + validate required tool args (no more junk writes)
 - [ ] Context compaction when the window fills up
 - [ ] Streaming responses for token‑by‑token dashboard updates
 - [ ] Browse past session logs in the dashboard

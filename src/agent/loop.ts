@@ -78,6 +78,22 @@ export async function runLoop(opts: LoopOptions): Promise<LoopResult> {
       for (const c of res.toolCalls) assistantBlocks.push({ type: "tool_call", id: c.id, name: c.name, input: c.input });
       messages.push({ role: "assistant", content: assistantBlocks });
 
+      // 截断检测：回复因超出输出上限被切断 → 工具调用很可能不完整（参数 JSON 残缺 → 解析成 {}）。
+      // 不执行那些残缺调用，回灌提示让模型缩短/分块重来。否则会写出 undefined 垃圾文件还谎报成功。
+      if (res.stopReason === "length" || res.stopReason === "max_tokens") {
+        const notice =
+          "（上一条回复因超出输出上限被截断，工具调用不完整、未执行。请缩短单次输出，或把大文件分多次写：先 write_file 写开头，再用 edit_file 追加补全。）";
+        bus.emit({ type: "error", where: "truncation", message: "模型输出被截断(max_tokens)，已提示分块重试", ...env() });
+        // 协议要求每个 tool_use 都要配一个 tool_result；没有工具调用就回一条普通提示。
+        messages.push({
+          role: "user",
+          content: res.toolCalls.length
+            ? res.toolCalls.map((c): ContentBlock => ({ type: "tool_result", id: c.id, content: notice, isError: true }))
+            : [{ type: "text", text: notice }],
+        });
+        continue;
+      }
+
       // 没有工具调用 = 收尾。
       if (res.toolCalls.length === 0) {
         finalText = res.text;
@@ -123,6 +139,12 @@ async function runTool(
   };
 
   if (!tool) return fail(`未知工具：${call.name}`);
+
+  // 参数校验：缺必填参数就报清晰错误、不执行。
+  // 这是截断的安全网——参数被解析成 {} 时不会再写出 undefined 垃圾文件，而是让模型收到明确报错去纠正。
+  const required = (tool.parameters?.required as string[] | undefined) ?? [];
+  const missing = required.filter((k) => call.input[k] === undefined || call.input[k] === "");
+  if (missing.length) return fail(`缺少必填参数：${missing.join(", ")}（若上一步回复被截断，请缩短或分块重写）`);
 
   if (tool.dangerous) {
     bus.emit({ type: "permission_request", toolCallId: call.id, name: call.name, args: call.input, ...env() });

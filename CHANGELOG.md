@@ -4,6 +4,13 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.1.1] — 2026-05-31
+
+### Fixed
+- **Truncation defense.** When a model response is cut off at its output limit (`finish_reason: length` / `stop_reason: max_tokens`), its tool call is incomplete and its arguments parse to `{}`. The agent now:
+  - **Detects truncation** and, instead of running the broken tool call, tells the model its reply was truncated so it can shorten or write large files in chunks.
+  - **Validates required tool arguments** before executing — a missing arg now returns a clear error instead of silently writing a junk `undefined` file and reporting success.
+
 ## [0.1.0] — 2026-05-31
 
 First public release. 🎉
@@ -29,4 +36,5 @@ First public release. 🎉
 - Real-time **web dashboard** (SSE): conversation flow, per-call LLM details with full raw request/response, tool calls, context usage, multi-agent tree.
 - **Session logging**: every run recorded as a readable `.log` and a complete `.jsonl`.
 
+[0.1.1]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.1.1
 [0.1.0]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.1.0

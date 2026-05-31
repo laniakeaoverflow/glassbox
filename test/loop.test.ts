@@ -11,7 +11,9 @@ import type { LLMProvider } from "../src/providers/provider.ts";
 import type { Tool } from "../src/types.ts";
 
 /** 脚本化的假 provider：按预设依次返回。 */
-function fakeProvider(script: Array<{ text: string; toolCalls?: { id: string; name: string; input: any }[] }>): LLMProvider {
+function fakeProvider(
+  script: Array<{ text: string; toolCalls?: { id: string; name: string; input: any }[]; stopReason?: string }>
+): LLMProvider {
   let i = 0;
   return {
     name: "fake",
@@ -22,7 +24,7 @@ function fakeProvider(script: Array<{ text: string; toolCalls?: { id: string; na
         text: step.text,
         toolCalls: step.toolCalls ?? [],
         usage: { inputTokens: 10, outputTokens: 5 },
-        stopReason: step.toolCalls?.length ? "tool_use" : "end_turn",
+        stopReason: step.stopReason ?? (step.toolCalls?.length ? "tool_use" : "end_turn"),
         raw: { fake: true },
         rawRequest: { fake: true },
       };
@@ -119,4 +121,50 @@ test("maxTurns 护栏：工具死循环会被截断", async () => {
   });
 
   assert.equal(result.ok, false); // 达到 maxTurns
+});
+
+// 一个带必填参数、并记录是否被执行的工具
+function writerTool(flag: { executed: boolean }): Tool {
+  return {
+    name: "writer",
+    description: "写文件",
+    parameters: { type: "object", properties: { path: { type: "string" } }, required: ["path"] },
+    async execute() {
+      flag.executed = true;
+      return "wrote";
+    },
+  };
+}
+
+test("Fix A 参数校验：缺必填参数则报错、不执行（防 undefined 垃圾文件）", async () => {
+  const flag = { executed: false };
+  const provider = fakeProvider([
+    { text: "", toolCalls: [{ id: "w1", name: "writer", input: {} }] }, // 空参数（模拟截断退化成 {}）
+    { text: "收到报错，改一下" },
+  ]);
+  const result = await runLoop({
+    task: "写", agentId: "fa", depth: 0, provider, tools: [writerTool(flag)],
+    systemPrompt: "t", maxTurns: 10, confirm: async () => true,
+  });
+  assert.equal(flag.executed, false, "缺必填参数不应执行");
+  assert.equal(result.ok, true);
+});
+
+test("Fix B 截断检测：stopReason=length 时不执行残缺工具调用，回灌提示", async () => {
+  const flag = { executed: false };
+  const events: string[] = [];
+  const off = bus.on((e) => events.push(e.type));
+  const provider = fakeProvider([
+    // 参数其实是齐的，但 stopReason=length 表示被截断 → 仍不应执行
+    { text: "我来写", toolCalls: [{ id: "t1", name: "writer", input: { path: "x" } }], stopReason: "length" },
+    { text: "改短重来：写好了" },
+  ]);
+  const result = await runLoop({
+    task: "写大文件", agentId: "fb", depth: 0, provider, tools: [writerTool(flag)],
+    systemPrompt: "t", maxTurns: 10, confirm: async () => true,
+  });
+  off();
+  assert.equal(flag.executed, false, "被截断的工具调用不应执行");
+  assert.ok(events.includes("error"), "应发出截断 error 事件");
+  assert.equal(result.finalText, "改短重来：写好了");
 });
