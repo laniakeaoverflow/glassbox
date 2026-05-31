@@ -4,6 +4,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] — 2026-06-01
+
+### Added
+- **`web_fetch` tool.** The agent can now fetch a URL and read its main text (HTML stripped, truncated) — useful for looking things up or reading docs.
+
 ## [0.3.0] — 2026-06-01
 
 ### Added
@@ -50,6 +55,7 @@ First public release. 🎉
 - Real-time **web dashboard** (SSE): conversation flow, per-call LLM details with full raw request/response, tool calls, context usage, multi-agent tree.
 - **Session logging**: every run recorded as a readable `.log` and a complete `.jsonl`.
 
+[0.4.0]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.4.0
 [0.3.0]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.3.0
 [0.2.0]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.2.0
 [0.1.1]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.1.1

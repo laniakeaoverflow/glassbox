@@ -10,7 +10,7 @@ Most AI coding tools are black boxes. `glassbox` is the opposite: a ~1,000‑lin
 
 [![CI](https://github.com/laniakeaoverflow/glassbox/actions/workflows/ci.yml/badge.svg)](https://github.com/laniakeaoverflow/glassbox/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.3.0-58d3e8.svg)
+![Version](https://img.shields.io/badge/version-0.4.0-58d3e8.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Node%2020%2B-3178c6.svg)
 ![PRs welcome](https://img.shields.io/badge/PRs-welcome-bc8cff.svg)
 
@@ -130,7 +130,7 @@ src/
   agent/loop.ts        ★ the reentrant agent loop (main + sub-agents)
   events/              the event bus (spine) + typed events
   providers/           Anthropic + OpenAI-compatible adapters, pricing/limits table
-  tools/               read/write/edit, bash (+ background), search, spawn sub-agent
+  tools/               read/write/edit, bash (+ background), search, web_fetch, spawn sub-agent
   ui/                  raw-mode line editor, key decoder, arrow-key picker, printer
   logging/             per-session .log + .jsonl recorder
   dashboard/           SSE server + vanilla-JS frontend (5 views + raw I/O modal)

@@ -1,6 +1,6 @@
 {
   "name": "glassbox",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "description": "A tiny, readable coding agent you can watch think — a Claude-Code-style CLI with a live web dashboard that x-rays every LLM call, tool call and token.",
   "keywords": [
