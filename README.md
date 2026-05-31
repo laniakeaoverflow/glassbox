@@ -148,7 +148,8 @@ Run the tests (no key required): `npm test`.
 - [x] Context compaction when the window fills up
 - [ ] Streaming responses for token‑by‑token dashboard updates
 - [x] Browse past session logs in the dashboard (replay)
-- [ ] More tools (web fetch, apply‑patch)
+- [x] `web_fetch` tool — the agent can read the web
+- [ ] More tools (apply‑patch, web search)
 
 Contributions welcome — pick anything above or open an issue. ⭐ a star helps a lot!
 
