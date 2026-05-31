@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="340" viewBox="0 0 820 340" font-family="ui-monospace, Menlo, monospace">
+  <defs>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#58d3e8"/>
+      <stop offset="1" stop-color="#bc8cff"/>
+    </linearGradient>
+  </defs>
+  <rect width="820" height="340" rx="12" fill="#0d1117"/>
+  <!-- header -->
+  <text x="32" y="58" font-size="30" font-weight="700" fill="#e6edf3">🔍 glassbox</text>
+  <text x="32" y="86" font-size="15" fill="#8b949e">watch an AI coding agent think — every prompt, tool call, token &amp; dollar</text>
+  <rect x="690" y="38" width="98" height="26" rx="13" fill="#161b22" stroke="#2a3038"/>
+  <circle cx="706" cy="51" r="4" fill="#3fb950"/>
+  <text x="716" y="55" font-size="12" fill="#3fb950">live</text>
+
+  <!-- panel 1: LLM call -->
+  <rect x="32" y="116" width="372" height="92" rx="8" fill="#161b22" stroke="#2a3038"/>
+  <text x="48" y="140" font-size="12" fill="#58d3e8">② LLM 调用</text>
+  <text x="48" y="166" font-size="13" fill="#bc8cff" font-weight="700">deepseek/deepseek-chat</text>
+  <text x="48" y="186" font-size="11" fill="#8b949e">994ms · in 1006 / out 53 tok · $0.00016 · tool_calls</text>
+  <text x="48" y="200" font-size="11" fill="#58d3e8">🔍 点击查看完整输入 / 输出</text>
+
+  <!-- panel 2: tool call -->
+  <rect x="420" y="116" width="368" height="92" rx="8" fill="#161b22" stroke="#2a3038"/>
+  <text x="436" y="140" font-size="12" fill="#58d3e8">③ 工具调用</text>
+  <text x="436" y="166" font-size="13" fill="#d29922" font-weight="700">write_file</text>
+  <text x="436" y="186" font-size="11" fill="#8b949e">{"path":"index.html", ...}</text>
+  <text x="436" y="200" font-size="11" fill="#3fb950">✓ 5ms · 已写入 index.html（21974 字符）</text>
+
+  <!-- panel 3: timeline -->
+  <rect x="32" y="220" width="372" height="92" rx="8" fill="#161b22" stroke="#2a3038"/>
+  <text x="48" y="244" font-size="12" fill="#58d3e8">① 对话流</text>
+  <text x="48" y="268" font-size="11" fill="#e6edf3">▶ 任务: 写一个网页小游戏</text>
+  <text x="48" y="286" font-size="11" fill="#58d3e8">◆ 助手: 我来用 Three.js 做一个…</text>
+  <text x="48" y="302" font-size="11" fill="#d29922">→ 工具 write_file</text>
+
+  <!-- panel 4: agent tree -->
+  <rect x="420" y="220" width="368" height="92" rx="8" fill="#161b22" stroke="#2a3038"/>
+  <text x="436" y="244" font-size="12" fill="#58d3e8">⑤ 多 Agent 协作树</text>
+  <text x="436" y="268" font-size="12" fill="#bc8cff" font-weight="700">main-1 ✓</text>
+  <text x="452" y="286" font-size="12" fill="#bc8cff">main-1.1 ●</text>
+  <text x="452" y="302" font-size="12" fill="#bc8cff">main-1.2 ●</text>
+
+  <rect x="0.5" y="0.5" width="819" height="339" rx="12" fill="none" stroke="url(#accent)" stroke-opacity="0.4"/>
+</svg>

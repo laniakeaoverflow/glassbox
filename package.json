@@ -1,0 +1,57 @@
+{
+  "name": "glassbox",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "A tiny, readable coding agent you can watch think — a Claude-Code-style CLI with a live web dashboard that x-rays every LLM call, tool call and token.",
+  "keywords": [
+    "ai-agent",
+    "coding-agent",
+    "llm",
+    "claude",
+    "deepseek",
+    "openai",
+    "agent",
+    "cli",
+    "dashboard",
+    "observability",
+    "tool-use",
+    "educational"
+  ],
+  "homepage": "https://github.com/laniakeaoverflow/glassbox#readme",
+  "bugs": "https://github.com/laniakeaoverflow/glassbox/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/laniakeaoverflow/glassbox.git"
+  },
+  "author": "laniakeaoverflow",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "glassbox": "dist/index.js",
+    "gb": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    ".env.example",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc && node -e \"require('fs').cpSync('src/dashboard/public','dist/dashboard/public',{recursive:true})\"",
+    "prepare": "npm run build",
+    "test": "node --test --import tsx test/*.test.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "dotenv": "^16.4.7",
+    "openai": "^4.77.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
