@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] — 2026-06-01
+
+### Added
+- **Memory (à la Claude Code).** Two tiers, both auto-loaded into the system prompt at startup so the agent isn't amnesiac across sessions:
+  - **Static memory** you write — `~/.glassbox/GLASSBOX.md` (all projects) and `./GLASSBOX.md` (this project).
+  - **Agent memory** it writes — a new `remember` tool appends learnings to a per-project `MEMORY.md` that loads back next time.
+  - `/memory` lists the sources and shows what's loaded.
+
 ## [0.4.0] — 2026-06-01
 
 ### Added
@@ -55,6 +63,7 @@ First public release. 🎉
 - Real-time **web dashboard** (SSE): conversation flow, per-call LLM details with full raw request/response, tool calls, context usage, multi-agent tree.
 - **Session logging**: every run recorded as a readable `.log` and a complete `.jsonl`.
 
+[0.5.0]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.5.0
 [0.4.0]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.4.0
 [0.3.0]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.3.0
 [0.2.0]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.2.0

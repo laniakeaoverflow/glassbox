@@ -4,11 +4,12 @@ import { readFile, writeFile, editFile, listDir } from "./fs.js";
 import { bash, bashOutput, killShell } from "./bash.js";
 import { grep, glob } from "./search.js";
 import { webFetch } from "./web.js";
+import { rememberTool } from "./memory.js";
 import { makeTaskTool, type TaskDeps } from "./task.js";
 
 /** 组装全部工具。task 工具需要拿到完整列表（含自己），用闭包 getter 解决自引用。 */
 export function buildTools(taskDeps: Omit<TaskDeps, "getTools">): Tool[] {
-  const tools: Tool[] = [readFile, writeFile, editFile, listDir, bash, bashOutput, killShell, grep, glob, webFetch];
+  const tools: Tool[] = [readFile, writeFile, editFile, listDir, bash, bashOutput, killShell, grep, glob, webFetch, rememberTool];
   tools.push(makeTaskTool({ ...taskDeps, getTools: () => tools }));
   return tools;
 }

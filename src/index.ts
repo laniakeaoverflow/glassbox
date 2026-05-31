@@ -12,6 +12,7 @@ import { select, type SelectOption } from "./ui/select.js";
 import { createInput, type Input } from "./ui/input.js";
 import { startDashboard } from "./dashboard/server.js";
 import { replaySession } from "./replay.js";
+import { loadMemory, memorySources } from "./memory.js";
 import { startSessionLog } from "./logging/session-log.js";
 import { killAllBackground } from "./tools/shells.js";
 
@@ -40,7 +41,8 @@ async function main() {
 
   // 可变：/model 命令运行时切换。task 工具和 runLoop 都通过 getter/闭包读它。
   let activeProvider = makeProvider(cfg);
-  const sysPrompt = systemPrompt(process.cwd());
+  // 系统提示 = 基础提示 + 记忆（GLASSBOX.md / 历史会话学到的经验），跨会话保留。
+  const sysPrompt = systemPrompt(process.cwd()) + loadMemory(process.cwd());
   const autoApprove = process.env.AUTO_APPROVE === "1";
 
   // 自己掌管的输入层（raw-mode 行编辑器 + bracketed paste；非 TTY 退化为按行读取）。
@@ -68,8 +70,10 @@ async function main() {
   const sessionLog = startSessionLog({ provider: activeProvider.name, model: activeProvider.model, cwd: process.cwd() });
 
   console.log(`\x1b[1mglassbox\x1b[0m  provider=\x1b[36m${activeProvider.name}/${activeProvider.model}\x1b[0m`);
-  console.log(`\x1b[2m面板: http://127.0.0.1:${cfg.dashboardPort}  ·  输入任务 · /model 切换模型 · /exit 退出\x1b[0m`);
-  console.log(`\x1b[2m本次日志: ${sessionLog.logPath}\x1b[0m\n`);
+  console.log(`\x1b[2m面板: http://127.0.0.1:${cfg.dashboardPort}  ·  /model 切换模型 · /memory 看记忆 · /exit 退出\x1b[0m`);
+  console.log(`\x1b[2m本次日志: ${sessionLog.logPath}\x1b[0m`);
+  if (loadMemory(process.cwd())) console.log(`\x1b[2m已加载记忆（/memory 查看）\x1b[0m`);
+  console.log();
 
   let n = 0;
   while (true) {
@@ -80,6 +84,13 @@ async function main() {
     if (text === "/exit" || text === "/quit") break;
     if (text === "/model" || text.startsWith("/model ")) {
       activeProvider = await handleModelCommand(text, cfg, activeProvider, input);
+      continue;
+    }
+    if (text === "/memory") {
+      console.log("\x1b[2m记忆来源（全局 / 项目 / agent 自记）：\x1b[0m");
+      for (const f of memorySources(process.cwd())) console.log("  " + f);
+      const mem = loadMemory(process.cwd());
+      console.log(mem ? `\x1b[2m--- 已加载内容 ---\x1b[0m${mem}` : "\x1b[2m（暂无记忆。用 remember 工具或写 GLASSBOX.md 来添加）\x1b[0m");
       continue;
     }
 

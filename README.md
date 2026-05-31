@@ -10,7 +10,7 @@ Most AI coding tools are black boxes. `glassbox` is the opposite: a ~1,000‑lin
 
 [![CI](https://github.com/laniakeaoverflow/glassbox/actions/workflows/ci.yml/badge.svg)](https://github.com/laniakeaoverflow/glassbox/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.4.0-58d3e8.svg)
+![Version](https://img.shields.io/badge/version-0.5.0-58d3e8.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Node%2020%2B-3178c6.svg)
 ![PRs welcome](https://img.shields.io/badge/PRs-welcome-bc8cff.svg)
 
@@ -33,6 +33,7 @@ Most AI coding tools are black boxes. `glassbox` is the opposite: a ~1,000‑lin
 - 🔌 **Compare providers head‑to‑head.** Anthropic, DeepSeek, and any OpenAI‑compatible API. Switch live with `/model` and watch how a different model handles the *same* task — speed, cost, and protocol differences side by side.
 - 🛠️ **It actually does work.** Real tools: read/write/edit files, run shell commands, start servers in the background, search code, and spawn sub‑agents. It builds real things (we made it write a playable 3D browser game).
 - 📼 **Every run is recorded.** Each session writes a human‑readable `.log` and a complete `.jsonl` so you can replay and debug exactly what happened.
+- 🧠 **Memory across sessions.** Write notes in a `GLASSBOX.md`, or let the agent save its own learnings with a `remember` tool — both auto‑load next time, so it isn't amnesiac (à la Claude Code's `CLAUDE.md` + auto‑memory).
 - ⌨️ **Hand‑built terminal UX.** A from‑scratch raw‑mode line editor with bracketed‑paste multiline input and an arrow‑key model picker — no `readline`.
 
 ---
@@ -120,6 +121,17 @@ flowchart LR
 The core loop is a simple `while`: send the system prompt + history to the model → it replies with text and/or **tool calls** → run the tools → feed results back → repeat until it's done. A **sub‑agent is just the same loop running again** with a focused task. That's the entire "intelligence" — a good loop, a good set of tools, and a good prompt.
 
 📖 The best file to read is [`src/agent/loop.ts`](src/agent/loop.ts).
+
+---
+
+## 🧠 Memory
+
+LLMs are stateless — every session starts blank. glassbox keeps two kinds of memory, both auto‑loaded into the system prompt at startup (modeled on Claude Code):
+
+- **You write it** — drop a `GLASSBOX.md` in your project (or `~/.glassbox/GLASSBOX.md` for all projects) with build commands, conventions, preferences.
+- **The agent writes it** — it has a `remember` tool that appends learnings to a per‑project `MEMORY.md`, which loads back next time.
+
+Type `/memory` to see what's loaded and where it lives.
 
 ---
 
