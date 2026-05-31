@@ -3,6 +3,7 @@
 import type { Message, Tool, ContentBlock } from "../types.js";
 import type { LLMProvider } from "../providers/provider.js";
 import { costUsd, contextLimit } from "../providers/pricing.js";
+import { compact, shouldCompact } from "./compaction.js";
 import { bus } from "../events/bus.js";
 
 export interface LoopOptions {
@@ -16,6 +17,8 @@ export interface LoopOptions {
   maxTurns: number;
   /** 危险工具的确认回调。返回 false 则拒绝执行。 */
   confirm: (req: { name: string; args: Record<string, unknown> }) => Promise<boolean>;
+  /** 上下文压缩阈值（输入 token / 窗口大小 超过它就压缩）。默认 0.7。 */
+  compactThreshold?: number;
 }
 
 export interface LoopResult {
@@ -42,6 +45,19 @@ export async function runLoop(opts: LoopOptions): Promise<LoopResult> {
   bus.emit({ type: "conversation_start", provider: provider.name, model: provider.model, task, ...env() });
 
   const messages: Message[] = [{ role: "user", content: [{ type: "text", text: task }] }];
+
+  // 接近上下文窗口就压缩历史。摘要调用本身的 token/成本也计入总账。
+  const maybeCompact = async (inputTokens: number) => {
+    if (!shouldCompact(inputTokens, contextLimit(provider.model), opts.compactThreshold ?? 0.7)) return;
+    const r = await compact(messages, provider);
+    if (r.after >= r.before) return;
+    messages.length = 0;
+    messages.push(...r.messages);
+    totalIn += r.usage.inputTokens;
+    totalOut += r.usage.outputTokens;
+    totalCost += costUsd(provider.model, r.usage.inputTokens, r.usage.outputTokens);
+    bus.emit({ type: "compaction", before: r.before, after: r.after, ...env() });
+  };
 
   try {
     for (turn = 1; turn <= maxTurns; turn++) {
@@ -91,6 +107,7 @@ export async function runLoop(opts: LoopOptions): Promise<LoopResult> {
             ? res.toolCalls.map((c): ContentBlock => ({ type: "tool_result", id: c.id, content: notice, isError: true }))
             : [{ type: "text", text: notice }],
         });
+        await maybeCompact(res.usage.inputTokens); // 截断常发生在上下文很大时，这里也要压缩
         continue;
       }
 
@@ -106,6 +123,8 @@ export async function runLoop(opts: LoopOptions): Promise<LoopResult> {
         resultBlocks.push(await runTool(call, byName, { agentId, depth: opts.depth }, confirm, env));
       }
       messages.push({ role: "user", content: resultBlocks });
+
+      await maybeCompact(res.usage.inputTokens); // 上一次调用的输入 token 接近窗口上限就压缩旧历史
     }
 
     if (turn > maxTurns) {

@@ -69,6 +69,7 @@ async function main() {
       tools,
       systemPrompt: sysPrompt,
       maxTurns: cfg.maxTurns,
+      compactThreshold: cfg.compactThreshold,
       confirm,
     });
     console.log();

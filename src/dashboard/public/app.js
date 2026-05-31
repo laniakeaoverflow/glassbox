@@ -122,6 +122,10 @@ function handle(e) {
       renderTree();
       break;
 
+    case "compaction":
+      addRow(timeline, `<span class="tag">🗜 压缩</span><span class="meta">上下文 ${e.before} → ${e.after} 条消息</span>`, sub);
+      break;
+
     case "error":
       addRow(timeline, `<span class="tag err">错误</span><span class="txt">${esc(e.message)}</span>`, sub);
       break;

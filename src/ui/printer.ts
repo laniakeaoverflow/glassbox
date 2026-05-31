@@ -38,6 +38,9 @@ export function startPrinter(): () => void {
         if (!e.parentAgentId)
           console.log(C.dim(`— 结束 · 共 in ${e.totalInputTokens} out ${e.totalOutputTokens} tok · $${e.totalCostUsd.toFixed(5)} —`));
         break;
+      case "compaction":
+        console.log(p + C.dim(`🗜  压缩上下文：${e.before} → ${e.after} 条消息`));
+        break;
       case "error":
         console.log(p + C.red("‼ " + e.message));
         break;

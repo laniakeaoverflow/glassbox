@@ -10,7 +10,7 @@
 
 [![CI](https://github.com/laniakeaoverflow/glassbox/actions/workflows/ci.yml/badge.svg)](https://github.com/laniakeaoverflow/glassbox/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.1.1-58d3e8.svg)
+![Version](https://img.shields.io/badge/version-0.2.0-58d3e8.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Node%2020%2B-3178c6.svg)
 
 [快速上手](#-快速上手) · [面板看什么](#-面板能看到什么) · [工作原理](#-工作原理) · [English](README.md)
@@ -97,7 +97,7 @@ npm run dev
 ## 🗺️ 路线图
 
 - [x] 检测被截断的工具调用 + 校验必填参数（不再写出垃圾文件）
-- [ ] 上下文写满时自动压缩
+- [x] 上下文写满时自动压缩
 - [ ] 流式响应，面板逐 token 更新
 - [ ] 在面板里浏览历史会话日志
 - [ ] 更多工具（网页抓取、apply-patch）

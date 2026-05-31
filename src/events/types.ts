@@ -42,6 +42,7 @@ export type AgentEvent = Envelope &
     | { type: "permission_resolved"; toolCallId: string; approved: boolean }
     | { type: "subagent_spawn"; childAgentId: string; task: string }
     | { type: "subagent_result"; childAgentId: string; ok: boolean; summary: string }
+    | { type: "compaction"; before: number; after: number } // 上下文压缩：消息数 before→after
     | { type: "conversation_end"; ok: boolean; totalInputTokens: number; totalOutputTokens: number; totalCostUsd: number }
     | { type: "error"; where: string; message: string }
   );

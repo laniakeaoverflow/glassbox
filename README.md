@@ -10,7 +10,7 @@ Most AI coding tools are black boxes. `glassbox` is the opposite: a ~1,000‑lin
 
 [![CI](https://github.com/laniakeaoverflow/glassbox/actions/workflows/ci.yml/badge.svg)](https://github.com/laniakeaoverflow/glassbox/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.1.1-58d3e8.svg)
+![Version](https://img.shields.io/badge/version-0.2.0-58d3e8.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Node%2020%2B-3178c6.svg)
 ![PRs welcome](https://img.shields.io/badge/PRs-welcome-bc8cff.svg)
 
@@ -131,7 +131,7 @@ Run the tests (no key required): `npm test`.
 ## 🗺️ Roadmap
 
 - [x] Detect truncated tool calls + validate required tool args (no more junk writes)
-- [ ] Context compaction when the window fills up
+- [x] Context compaction when the window fills up
 - [ ] Streaming responses for token‑by‑token dashboard updates
 - [ ] Browse past session logs in the dashboard
 - [ ] More tools (web fetch, apply‑patch)

@@ -4,6 +4,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.0] — 2026-06-01
+
+### Added
+- **Context compaction.** When the history approaches the model's context window (default 70%), older messages are summarized into a single progress note while the task and recent turns are kept intact — so long sessions don't blow the context limit or keep getting more expensive. Shown in the terminal, the dashboard, and session logs. Tunable via `COMPACT_THRESHOLD`.
+- **CI.** GitHub Actions runs type-checking and the test suite on every push/PR.
+
 ## [0.1.1] — 2026-05-31
 
 ### Fixed
@@ -36,5 +42,6 @@ First public release. 🎉
 - Real-time **web dashboard** (SSE): conversation flow, per-call LLM details with full raw request/response, tool calls, context usage, multi-agent tree.
 - **Session logging**: every run recorded as a readable `.log` and a complete `.jsonl`.
 
+[0.2.0]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.2.0
 [0.1.1]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.1.1
 [0.1.0]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.1.0

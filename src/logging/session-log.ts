@@ -80,6 +80,8 @@ function renderLine(e: AgentEvent): string | null {
       return `${pre}[${t(e.ts)}] ⑂ 子 agent ${e.childAgentId} 结束（${e.ok ? "成功" : "失败"}）`;
     case "conversation_end":
       return `${pre}[${t(e.ts)}] ■ ${id} 结束 · 共 in ${e.totalInputTokens} / out ${e.totalOutputTokens} tok · $${e.totalCostUsd.toFixed(5)}\n`;
+    case "compaction":
+      return `${pre}[${t(e.ts)}] 🗜 压缩上下文：${e.before} → ${e.after} 条消息`;
     case "error":
       return `${pre}[${t(e.ts)}] ‼ 错误 [${e.where}]: ${e.message}`;
     default:
