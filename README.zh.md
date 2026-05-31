@@ -8,8 +8,9 @@
 
 大多数 AI 编程工具是黑盒。`glassbox` 反过来：约 1000 行、仿 Claude Code 的 agent，代码你真能读懂；再加一个实时面板，让你**清清楚楚**看到它在干什么——发给模型的每一句话、跑的每一个工具、花了多少钱。
 
+[![CI](https://github.com/laniakeaoverflow/glassbox/actions/workflows/ci.yml/badge.svg)](https://github.com/laniakeaoverflow/glassbox/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.1.0-58d3e8.svg)
+![Version](https://img.shields.io/badge/version-0.1.1-58d3e8.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Node%2020%2B-3178c6.svg)
 
 [快速上手](#-快速上手) · [面板看什么](#-面板能看到什么) · [工作原理](#-工作原理) · [English](README.md)
