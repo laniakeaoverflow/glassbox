@@ -10,7 +10,7 @@
 
 [![CI](https://github.com/laniakeaoverflow/glassbox/actions/workflows/ci.yml/badge.svg)](https://github.com/laniakeaoverflow/glassbox/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.5.0-58d3e8.svg)
+![Version](https://img.shields.io/badge/version-0.6.0-58d3e8.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Node%2020%2B-3178c6.svg)
 
 [快速上手](#-快速上手) · [面板看什么](#-面板能看到什么) · [工作原理](#-工作原理) · [English](README.md)
@@ -31,6 +31,7 @@
 - 🔌 **多家模型同台对比。** Anthropic、DeepSeek、任意 OpenAI 兼容接口。用 `/model` 实时切换，看不同模型处理**同一个任务**——速度、成本、协议差异一目了然。
 - 🛠️ **它是真能干活的。** 读写改文件、跑 shell 命令、后台起服务器、搜代码、派生子 agent。能做出真东西（我们让它写出了一个能玩的 3D 网页游戏）。
 - 📼 **每次运行都有记录。** 每个会话写一份可读 `.log` 和一份完整 `.jsonl`，方便回放和排查。
+- 🌐 **面板中英双语。** 顶部一键切换中文 / English（默认跟随浏览器语言）。
 - 🧠 **跨会话记忆。** 在 `GLASSBOX.md` 里写笔记，或让 agent 用 `remember` 工具记下它学到的经验——两者下次启动都自动加载，不再「失忆」（仿 Claude Code 的 `CLAUDE.md` + auto-memory）。
 - ⌨️ **手写的终端交互。** 从零实现的 raw-mode 行编辑器，支持粘贴多行、方向键选模型——没用 `readline`。
 

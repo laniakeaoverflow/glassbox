@@ -26,8 +26,20 @@ header {
 }
 .brand { font-weight: 700; font-size: 15px; }
 .brand .sub { color: var(--dim); font-weight: 400; font-size: 12px; margin-left: 6px; }
+.head-right { display: flex; align-items: center; gap: 14px; }
 .conn { font-size: 12px; color: var(--dim); }
 .conn.on { color: var(--green); }
+.lang {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  padding: 3px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.lang:hover { border-color: var(--cyan); color: var(--cyan); }
 
 .stats {
   display: grid;

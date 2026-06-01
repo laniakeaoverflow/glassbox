@@ -4,6 +4,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] — 2026-06-01
+
+### Added
+- **Bilingual dashboard (中文 / English).** A one-click language toggle in the header; defaults to the browser language (English for non-Chinese visitors), remembered in `localStorage`. All labels, tags, and the input/output modal are translated.
+
 ## [0.5.0] — 2026-06-01
 
 ### Added
@@ -63,6 +68,7 @@ First public release. 🎉
 - Real-time **web dashboard** (SSE): conversation flow, per-call LLM details with full raw request/response, tool calls, context usage, multi-agent tree.
 - **Session logging**: every run recorded as a readable `.log` and a complete `.jsonl`.
 
+[0.6.0]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.6.0
 [0.5.0]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.5.0
 [0.4.0]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.4.0
 [0.3.0]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.3.0

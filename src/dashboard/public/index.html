@@ -3,54 +3,52 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>glassbox · 工作面板</title>
+    <title>glassbox</title>
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
     <header>
-      <div class="brand">🔍 glassbox <span class="sub">实时工作面板</span></div>
-      <div class="conn" id="conn">连接中…</div>
+      <div class="brand">🔍 glassbox <span class="sub" data-i18n="brandSub">实时工作面板</span></div>
+      <div class="head-right">
+        <button id="lang-toggle" class="lang" title="中文 / English">EN</button>
+        <div class="conn" id="conn">…</div>
+      </div>
     </header>
 
     <section class="stats" id="stats">
-      <div class="stat"><label>Provider / Model</label><b id="s-model">—</b></div>
-      <div class="stat"><label>轮数 (turn)</label><b id="s-turn">0</b></div>
-      <div class="stat"><label>累计 token</label><b id="s-tok">0</b></div>
-      <div class="stat"><label>累计成本</label><b id="s-cost">$0</b></div>
+      <div class="stat"><label data-i18n="statModel">Provider / Model</label><b id="s-model">—</b></div>
+      <div class="stat"><label data-i18n="statTurn">轮数 (turn)</label><b id="s-turn">0</b></div>
+      <div class="stat"><label data-i18n="statTok">累计 token</label><b id="s-tok">0</b></div>
+      <div class="stat"><label data-i18n="statCost">累计成本</label><b id="s-cost">$0</b></div>
       <div class="stat ctx">
-        <label>上下文占用（最近一次调用）</label>
+        <label data-i18n="statCtx">上下文占用（最近一次调用）</label>
         <div class="gauge"><div id="ctx-bar"></div></div>
         <span id="ctx-text">—</span>
       </div>
     </section>
 
     <main>
-      <!-- 视图1：对话流时间线 -->
       <div class="panel timeline">
-        <h2>① 对话流</h2>
+        <h2><span data-i18n="panelTimeline">① 对话流</span></h2>
         <div id="timeline" class="scroll"></div>
       </div>
 
       <div class="col">
-        <!-- 视图2：每次 LLM 调用 -->
         <div class="panel">
-          <h2>② LLM 调用 <span class="hint">点开看原始报文 →对比 provider 协议</span></h2>
+          <h2><span data-i18n="panelLlm">② LLM 调用</span> <span class="hint" data-i18n="panelLlmHint">点开看原始报文 → 对比 provider</span></h2>
           <div id="llm" class="scroll"></div>
         </div>
-        <!-- 视图3：工具调用 -->
         <div class="panel">
-          <h2>③ 工具调用</h2>
+          <h2><span data-i18n="panelTools">③ 工具调用</span></h2>
           <div id="tools" class="scroll"></div>
         </div>
-        <!-- 视图5：多 agent 协作树 -->
         <div class="panel">
-          <h2>⑤ 多 Agent 协作树</h2>
+          <h2><span data-i18n="panelTree">⑤ 多 Agent 协作树</span></h2>
           <div id="tree" class="scroll"></div>
         </div>
       </div>
     </main>
 
-    <!-- 完整输入/输出 详情弹窗 -->
     <div id="modal" class="modal hidden">
       <div class="modal-card">
         <div class="modal-head">
