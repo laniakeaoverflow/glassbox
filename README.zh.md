@@ -18,7 +18,7 @@
 </div>
 
 <p align="center">
-  <img src="docs/hero.png" alt="glassbox — 看着 AI 编程 agent 思考" width="820">
+  <img src="docs/hero.jpg" alt="glassbox — 看着 AI 编程 agent 思考" width="820">
   <br><sub><i>实时面板：对话流、每次模型调用（含原始请求/响应）、工具调用、计划(todo)面板、上下文占用、多 agent 协作树。</i></sub>
 </p>
 

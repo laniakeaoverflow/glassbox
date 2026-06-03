@@ -18,9 +18,9 @@ Most AI coding tools are black boxes. `glassbox` is the opposite: a ~1,000‑lin
 
 </div>
 
-<!-- TIP: docs/hero.png is a generated hero. A real dashboard screenshot or GIF would convert even better — swap it in when you have one. -->
+<!-- TIP: docs/hero.jpg is a generated hero. A real dashboard screenshot or GIF would convert even better — swap it in when you have one. -->
 <p align="center">
-  <img src="docs/hero.png" alt="glassbox — watch an AI coding agent think" width="820">
+  <img src="docs/hero.jpg" alt="glassbox — watch an AI coding agent think" width="820">
   <br><sub><i>The live dashboard — conversation flow, every LLM call (with raw request/response), tool calls, the plan (todo) panel, context usage, and the multi‑agent tree.</i></sub>
 </p>
 
