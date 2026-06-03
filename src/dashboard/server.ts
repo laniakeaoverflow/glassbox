@@ -16,6 +16,7 @@ export function startDashboard(port: number): http.Server {
   // 留一份近期事件，晚连上来的浏览器也能看到历史。
   const backlog: AgentEvent[] = [];
   bus.on((e) => {
+    if (e.type === "llm_delta") return; // 流式增量不留底：晚连上来的浏览器看最终 llm_response 即可，避免冲爆 backlog
     backlog.push(e);
     if (backlog.length > 1000) backlog.shift();
   });

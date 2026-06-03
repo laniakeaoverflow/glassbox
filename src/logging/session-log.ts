@@ -34,6 +34,7 @@ export function startSessionLog(meta: { provider: string; model: string; cwd: st
   jsonl.write(JSON.stringify({ type: "session_start", ts: Date.parse(startedAt), ...meta }) + "\n");
 
   const off = bus.on((e) => {
+    if (e.type === "llm_delta") return; // 流式增量量大且最终 llm_response 已含全文，不落盘（也让 replay 干净）
     jsonl.write(JSON.stringify(e) + "\n"); // 全量
     const line = renderLine(e);
     if (line) log.write(line + "\n");
@@ -86,6 +87,10 @@ function renderLine(e: AgentEvent): string | null {
       return `${pre}[${t(e.ts)}] ⑂ 子 agent ${e.childAgentId} 结束（${e.ok ? "成功" : "失败"}）`;
     case "conversation_end":
       return `${pre}[${t(e.ts)}] ■ ${id} 结束 · 共 in ${e.totalInputTokens} / out ${e.totalOutputTokens} tok · $${e.totalCostUsd.toFixed(5)}\n`;
+    case "todo_update":
+      return `${pre}[${t(e.ts)}] 📋 计划更新：\n${pre}  ${e.todos.map((x) => `${x.status === "completed" ? "[x]" : x.status === "in_progress" ? "[~]" : "[ ]"} ${x.content}`).join("\n" + pre + "  ")}`;
+    case "reminder":
+      return `${pre}[${t(e.ts)}] 💉 注入提醒[${e.source}]: ${cap(e.text, 500).replace(/\n/g, "\n" + pre + "  ")}`;
     case "compaction":
       return `${pre}[${t(e.ts)}] 🗜 压缩上下文：${e.before} → ${e.after} 条消息`;
     case "error":

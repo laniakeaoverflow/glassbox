@@ -8,18 +8,19 @@ import assert from "node:assert/strict";
 import { runLoop } from "../src/agent/loop.ts";
 import { bus } from "../src/events/bus.ts";
 import type { LLMProvider } from "../src/providers/provider.ts";
-import type { Tool } from "../src/types.ts";
+import type { Tool, StreamDelta } from "../src/types.ts";
 
-/** 脚本化的假 provider：按预设依次返回。 */
+/** 脚本化的假 provider：按预设依次返回。可选 deltas：调用时透传给 onDelta（模拟流式）。 */
 function fakeProvider(
-  script: Array<{ text: string; toolCalls?: { id: string; name: string; input: any }[]; stopReason?: string }>
+  script: Array<{ text: string; toolCalls?: { id: string; name: string; input: any }[]; stopReason?: string; deltas?: StreamDelta[] }>
 ): LLMProvider {
   let i = 0;
   return {
     name: "fake",
     model: "fake-model",
-    async chat() {
+    async chat(_sys, _msgs, _tools, onDelta) {
       const step = script[Math.min(i++, script.length - 1)];
+      if (onDelta && step.deltas) for (const d of step.deltas) onDelta(d);
       return {
         text: step.text,
         toolCalls: step.toolCalls ?? [],
@@ -148,6 +149,91 @@ test("Fix A 参数校验：缺必填参数则报错、不执行（防 undefined 
   });
   assert.equal(flag.executed, false, "缺必填参数不应执行");
   assert.equal(result.ok, true);
+});
+
+test("流式：deltas 透传成 llm_delta 事件，最终结果与非流式一致", async () => {
+  const events: any[] = [];
+  const off = bus.on((e) => events.push(e));
+  const provider = fakeProvider([
+    {
+      text: "你好世界",
+      deltas: [
+        { kind: "text", text: "你好" },
+        { kind: "text", text: "世界" },
+      ],
+    },
+  ]);
+  const result = await runLoop({
+    task: "打个招呼", agentId: "stream-1", depth: 0, provider, tools: [],
+    systemPrompt: "t", maxTurns: 10, confirm: async () => true, // stream 默认开
+  });
+  off();
+  const deltas = events.filter((e) => e.type === "llm_delta");
+  assert.equal(deltas.length, 2, "应发出 2 个 llm_delta");
+  assert.equal(deltas.map((d) => d.text).join(""), "你好世界");
+  assert.equal(result.finalText, "你好世界", "最终结果不受流式影响");
+});
+
+test("流式关闭（stream:false）时不发 llm_delta", async () => {
+  const events: string[] = [];
+  const off = bus.on((e) => events.push(e.type));
+  const provider = fakeProvider([{ text: "无流", deltas: [{ kind: "text", text: "无流" }] }]);
+  await runLoop({
+    task: "x", agentId: "nostream-1", depth: 0, provider, tools: [],
+    systemPrompt: "t", maxTurns: 10, confirm: async () => true, stream: false,
+  });
+  off();
+  assert.ok(!events.includes("llm_delta"), "关流时不应发 llm_delta");
+});
+
+test("注入：initialReminders 在第 1 轮被拼进首条 user 消息，并发 reminder 事件", async () => {
+  const seen: any[] = [];
+  const events: any[] = [];
+  const off = bus.on((e) => events.push(e));
+  const provider: LLMProvider = {
+    name: "fake", model: "fake-model",
+    async chat(_sys, msgs) {
+      seen.push(JSON.parse(JSON.stringify(msgs)));
+      return { text: "好的", toolCalls: [], usage: { inputTokens: 1, outputTokens: 1 }, stopReason: "end_turn", raw: {}, rawRequest: {} };
+    },
+  };
+  await runLoop({
+    task: "干活", agentId: "rem-1", depth: 0, provider, tools: [],
+    systemPrompt: "t", maxTurns: 5, confirm: async () => true, stream: false,
+    initialReminders: [{ source: "env", text: "ENV-CTX" }],
+  });
+  off();
+  const firstMsgText = JSON.stringify(seen[0][0]); // 第 1 轮的首条 user 消息
+  assert.ok(firstMsgText.includes("ENV-CTX"), "启动提醒应注入首条 user 消息");
+  assert.ok(firstMsgText.includes("<system-reminder>"), "应包成 system-reminder 块");
+  const rem = events.filter((e) => e.type === "reminder");
+  assert.equal(rem.length, 1);
+  assert.deepEqual({ source: rem[0].source, text: rem[0].text }, { source: "env", text: "ENV-CTX" });
+});
+
+test("注入：工具 ctx.remind 的内容在下一轮出现在发给模型的消息里", async () => {
+  const seen: any[] = [];
+  const provider: LLMProvider = {
+    name: "fake", model: "fake-model",
+    async chat(_sys, msgs) {
+      seen.push(JSON.parse(JSON.stringify(msgs)));
+      // 第 1 轮调用一个会 remind 的工具；第 2 轮收尾
+      if (seen.length === 1)
+        return { text: "", toolCalls: [{ id: "t1", name: "remtool", input: {} }], usage: { inputTokens: 1, outputTokens: 1 }, stopReason: "tool_use", raw: {}, rawRequest: {} };
+      return { text: "完成", toolCalls: [], usage: { inputTokens: 1, outputTokens: 1 }, stopReason: "end_turn", raw: {}, rawRequest: {} };
+    },
+  };
+  const remtool: Tool = {
+    name: "remtool", description: "会注入提醒", parameters: { type: "object", properties: {} },
+    async execute(_i, ctx) { ctx.remind?.("todo", "HELLO-REMINDER"); return "ok"; },
+  };
+  await runLoop({
+    task: "x", agentId: "rem-2", depth: 0, provider, tools: [remtool],
+    systemPrompt: "t", maxTurns: 5, confirm: async () => true, stream: false,
+  });
+  const turn2 = JSON.stringify(seen[1]); // 第 2 轮发给模型的消息
+  assert.ok(turn2.includes("HELLO-REMINDER"), "tool 注入的提醒应出现在下一轮消息里");
+  assert.ok(turn2.includes("<system-reminder>"));
 });
 
 test("Fix B 截断检测：stopReason=length 时不执行残缺工具调用，回灌提示", async () => {

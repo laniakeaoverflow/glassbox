@@ -1,6 +1,6 @@
 // Provider 接口：把"调一次大模型"抽象成统一形状。
 // 两个实现 anthropic.ts / openai.ts 各自把内部格式翻成自家协议，再把响应翻回来。
-import type { Message, Tool, LLMResult } from "../types.js";
+import type { Message, Tool, LLMResult, StreamDelta } from "../types.js";
 import type { Config, ProviderName } from "../config.js";
 import { AnthropicProvider } from "./anthropic.js";
 import { OpenAIProvider } from "./openai.js";
@@ -11,8 +11,16 @@ export interface LLMProvider {
   /**
    * 调一次模型。systemPrompt 单独传——Anthropic 是顶层参数，
    * OpenAI 要塞成 system 消息，由各适配器处理，绝不混进 messages。
+   *
+   * onDelta 传了就走流式：边收边回调增量，最后仍返回同样形状的 LLMResult；
+   * 不传则走非流式老路径（测试假 provider、关流场景）。
    */
-  chat(systemPrompt: string, messages: Message[], tools: Tool[]): Promise<LLMResult>;
+  chat(
+    systemPrompt: string,
+    messages: Message[],
+    tools: Tool[],
+    onDelta?: (d: StreamDelta) => void
+  ): Promise<LLMResult>;
 }
 
 /**

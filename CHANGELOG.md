@@ -4,6 +4,22 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.8.0] — 2026-06-03
+
+### Added
+- **System prompt, rewritten.** More "tuned" toward Claude Code's core discipline: concise output, tool-first, read-before-edit, and a directive to use `todo_write` for any 3+ step task — while staying readable (it's a learning project).
+- **`todo_write` tool + plan panel.** The agent maintains a live checklist (statuses `pending` / `in_progress` / `completed`, full-list replace, at most one `in_progress`). Emits a `todo_update` event rendered as a new **④ Plan panel** in the dashboard and a checklist in the terminal.
+- **`<system-reminder>` injection channel.** The harness can inject reminders into the model mid-conversation (the framework→model steering channel): a startup git/cwd snapshot, and the live todo list re-fed each turn. Each injection emits a `reminder` event the dashboard marks with a distinct `💉 injected` tag — so you can *see* the harness steering the model.
+
+### Fixed
+- **OpenAI/DeepSeek message ordering.** When a single user message carries both tool results and an injected reminder, `tool` messages are now emitted before the user text, so OpenAI-compatible providers don't reject the request.
+
+## [0.7.0] — 2026-06-02
+
+### Added
+- **Streaming responses.** Providers can stream token-by-token via an optional `onDelta` callback; the loop emits `llm_delta` events. The terminal types the main agent's reply live, and the dashboard grows the assistant message and **assembles tool-call argument JSON character-by-character**. Anthropic (`messages.stream`) and OpenAI-compatible (`stream: true`) both supported; the non-streaming path is untouched. Toggle with `STREAM=0`.
+- Streaming deltas are deliberately not persisted to the session log or dashboard backlog (the final `llm_response` already carries the full text), keeping logs and replay clean.
+
 ## [0.6.0] — 2026-06-01
 
 ### Added
@@ -68,6 +84,8 @@ First public release. 🎉
 - Real-time **web dashboard** (SSE): conversation flow, per-call LLM details with full raw request/response, tool calls, context usage, multi-agent tree.
 - **Session logging**: every run recorded as a readable `.log` and a complete `.jsonl`.
 
+[0.8.0]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.8.0
+[0.7.0]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.7.0
 [0.6.0]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.6.0
 [0.5.0]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.5.0
 [0.4.0]: https://github.com/laniakeaoverflow/glassbox/releases/tag/v0.4.0

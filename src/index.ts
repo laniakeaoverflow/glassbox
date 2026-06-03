@@ -5,6 +5,7 @@ import { stdin } from "node:process";
 import { loadConfig, type Config, type ProviderName } from "./config.js";
 import { makeProvider, type LLMProvider } from "./providers/provider.js";
 import { systemPrompt } from "./agent/system-prompt.js";
+import { envContext } from "./agent/env-context.js";
 import { buildTools } from "./tools/registry.js";
 import { runLoop } from "./agent/loop.js";
 import { startPrinter } from "./ui/printer.js";
@@ -61,6 +62,7 @@ async function main() {
     systemPrompt: sysPrompt,
     maxTurns: cfg.maxTurns,
     maxDepth: cfg.maxDepth,
+    stream: cfg.stream,
     confirm,
   });
 
@@ -103,6 +105,8 @@ async function main() {
       systemPrompt: sysPrompt,
       maxTurns: cfg.maxTurns,
       compactThreshold: cfg.compactThreshold,
+      stream: cfg.stream,
+      initialReminders: [{ source: "env", text: envContext(process.cwd()) }],
       confirm,
     });
     console.log();

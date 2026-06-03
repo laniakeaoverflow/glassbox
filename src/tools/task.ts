@@ -16,6 +16,7 @@ export interface TaskDeps {
   systemPrompt: string;
   maxTurns: number;
   maxDepth: number;
+  stream: boolean;
   confirm: LoopOptions["confirm"];
 }
 
@@ -48,6 +49,7 @@ export function makeTaskTool(deps: TaskDeps): Tool {
         tools: deps.getTools(),
         systemPrompt: deps.systemPrompt,
         maxTurns: deps.maxTurns,
+        stream: deps.stream,
         confirm: deps.confirm,
       });
 

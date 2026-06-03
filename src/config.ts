@@ -32,6 +32,7 @@ export interface Config {
   maxTurns: number; // 每个 loop 最多几轮，防工具死循环
   maxDepth: number; // 子 agent 最多嵌套几层，防套娃
   compactThreshold: number; // 输入 token / 上下文窗口 超过它就压缩历史
+  stream: boolean; // 流式输出（逐 token / 工具参数增量）。STREAM=0 关闭
 }
 
 export function loadConfig(): Config {
@@ -56,5 +57,6 @@ export function loadConfig(): Config {
     maxTurns: Number(process.env.MAX_TURNS ?? 20),
     maxDepth: Number(process.env.MAX_DEPTH ?? 2),
     compactThreshold: Number(process.env.COMPACT_THRESHOLD ?? 0.7),
+    stream: process.env.STREAM !== "0", // 默认开
   };
 }

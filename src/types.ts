@@ -13,6 +13,18 @@ export interface Message {
   content: ContentBlock[];
 }
 
+/**
+ * 流式增量。provider 边收边通过 onDelta 回调吐出，loop 把它发成 llm_delta 事件，
+ * 终端/面板据此「逐 token 涌出文本」「工具参数 JSON 一点点拼装」。
+ * 注意：这只是可视化用的副通道——一次调用的最终结果仍由 chat() 返回的 LLMResult 决定。
+ */
+// 字段名与 llm_delta 事件一致（toolId 而非 id，避免和事件信封的 id 撞名），
+// 这样 loop 里直接 { type:"llm_delta", ...delta } 展开即可，无需逐字段翻译。
+export type StreamDelta =
+  | { kind: "text"; text: string }
+  | { kind: "tool_start"; toolIndex: number; toolId: string; toolName: string }
+  | { kind: "tool_input"; toolIndex: number; partialJson: string };
+
 /** 一次 LLM 调用归一化后的结果。 */
 export interface LLMResult {
   text: string; // 助手这一轮说的话（可能为空）
@@ -38,4 +50,16 @@ export interface Tool {
 export interface ToolContext {
   agentId: string;
   depth: number;
+  /**
+   * 往「下一轮注入给模型」的队列里塞一条 system-reminder（框架→LLM 转向通道）。
+   * 由 loop 提供；todo_write 用它把当前清单回灌，让 todo 状态在后续轮次保持鲜活。
+   */
+  remind?: (source: string, text: string) => void;
+}
+
+/** 一条 todo。仿 Claude Code 的 TodoWrite：整张清单每次全量替换。 */
+export type TodoStatus = "pending" | "in_progress" | "completed";
+export interface TodoItem {
+  content: string;
+  status: TodoStatus;
 }

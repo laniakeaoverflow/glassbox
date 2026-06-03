@@ -4,13 +4,13 @@
 
 ### Watch an AI coding agent *think.*
 
-**A tiny, fully‑readable coding agent — with a live web dashboard that x‑rays every prompt, tool call, token and dollar.**
+**A tiny, fully‑readable coding agent — with a live web dashboard that x‑rays every prompt, tool call, token and dollar, in real time.**
 
-Most AI coding tools are black boxes. `glassbox` is the opposite: a ~1,000‑line, Claude‑Code‑style agent you can actually read, plus a real‑time panel that shows you *exactly* what it's doing — every message sent to the model, every tool it runs, and how much it costs.
+Most AI coding tools are black boxes. `glassbox` is the opposite: a ~1,000‑line, Claude‑Code‑style agent you can actually read, plus a real‑time panel that shows you *exactly* what it's doing — every token streamed from the model, every tool it runs, every reminder the harness injects, and how much it all costs.
 
 [![CI](https://github.com/laniakeaoverflow/glassbox/actions/workflows/ci.yml/badge.svg)](https://github.com/laniakeaoverflow/glassbox/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.6.0-58d3e8.svg)
+![Version](https://img.shields.io/badge/version-0.8.0-58d3e8.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Node%2020%2B-3178c6.svg)
 ![PRs welcome](https://img.shields.io/badge/PRs-welcome-bc8cff.svg)
 
@@ -18,24 +18,24 @@ Most AI coding tools are black boxes. `glassbox` is the opposite: a ~1,000‑lin
 
 </div>
 
-<!-- TIP: replace docs/banner.svg with a real dashboard screenshot or GIF — it's the single biggest driver of stars. -->
+<!-- TIP: docs/banner.svg is a placeholder — replacing it with a real dashboard screenshot or GIF is the single biggest driver of stars. -->
 <p align="center">
   <img src="docs/banner.svg" alt="glassbox live dashboard" width="820">
-  <br><sub><i>The live dashboard — conversation flow, every LLM call (with raw request/response), tool calls, context usage, and the multi‑agent tree.</i></sub>
+  <br><sub><i>The live dashboard — conversation flow, every LLM call (with raw request/response), tool calls, the plan (todo) panel, context usage, and the multi‑agent tree.</i></sub>
 </p>
 
 ---
 
 ## ✨ Why glassbox
 
-- 🔬 **See inside the black box.** A live dashboard streams the agent's every step: the full input sent to the model, its raw response, each tool call's arguments and results, latency, tokens, and estimated cost.
-- 🧠 **Learn how coding agents actually work.** The entire agent loop is ~1,000 lines of plain, commented TypeScript — no agent framework, no magic. If you've ever wondered how Claude Code / Cursor‑style agents work under the hood, read this.
-- 🔌 **Compare providers head‑to‑head.** Anthropic, DeepSeek, and any OpenAI‑compatible API. Switch live with `/model` and watch how a different model handles the *same* task — speed, cost, and protocol differences side by side.
-- 🛠️ **It actually does work.** Real tools: read/write/edit files, run shell commands, start servers in the background, search code, and spawn sub‑agents. It builds real things (we made it write a playable 3D browser game).
-- 📼 **Every run is recorded.** Each session writes a human‑readable `.log` and a complete `.jsonl` so you can replay and debug exactly what happened.
-- 🌐 **Bilingual dashboard.** 中文 / English, one‑click toggle in the header (defaults to your browser language).
-- 🧠 **Memory across sessions.** Write notes in a `GLASSBOX.md`, or let the agent save its own learnings with a `remember` tool — both auto‑load next time, so it isn't amnesiac (à la Claude Code's `CLAUDE.md` + auto‑memory).
-- ⌨️ **Hand‑built terminal UX.** A from‑scratch raw‑mode line editor with bracketed‑paste multiline input and an arrow‑key model picker — no `readline`.
+- 🔬 **See inside the black box.** A live dashboard streams the agent's every step — the full input sent to the model, its response **token‑by‑token**, each tool call's arguments and results, latency, tokens, and estimated cost.
+- 🪄 **Watch the *harness*, not just the model.** glassbox makes the framework's hidden moves visible: context **compaction**, and the `<system-reminder>` blocks it **injects** mid‑conversation (git status, the live todo list) to steer the model. This framework↔model interplay is exactly what's invisible in every other tool.
+- 🧠 **Learn how coding agents actually work.** The whole loop is ~1,000 lines of plain, commented TypeScript — no agent framework, no magic. If you've wondered how Claude Code / Cursor‑style agents work under the hood, read this.
+- 🔌 **Compare providers head‑to‑head.** Anthropic, DeepSeek, and any OpenAI‑compatible API. Switch live with `/model` and watch a different model handle the *same* task — speed, cost, and protocol differences side by side. (Same harness, different model = a controlled way to feel the model‑vs‑harness gap.)
+- 🛠️ **It actually does work.** Real tools: read/write/edit files, run shell commands, start servers in the background, search code, fetch the web, track a **todo plan**, and spawn sub‑agents.
+- 📼 **Every run is recorded.** Each session writes a human‑readable `.log` and a complete `.jsonl` so you can replay and debug exactly what happened — try it with **no API key**.
+- 🧠 **Memory across sessions.** A `GLASSBOX.md` you write, plus a `remember` tool the agent uses to save its own learnings — both auto‑load next time (à la Claude Code's `CLAUDE.md`).
+- 🌐 **Bilingual dashboard** (中文 / English) and a **hand‑built raw‑mode terminal UX** (bracketed‑paste multiline + arrow‑key model picker, no `readline`).
 
 ---
 
@@ -49,7 +49,7 @@ npm install
 npm run replay          # then open http://127.0.0.1:4100
 ```
 
-This plays back a real recorded session into the dashboard — click any LLM call to inspect its full input/output. No key, no cost.
+This plays a real recorded session back into the dashboard — click any LLM call to inspect its full input/output. No key, no cost.
 
 ---
 
@@ -92,13 +92,13 @@ Then open the dashboard at **http://127.0.0.1:4100**, type a task in the termina
 
 | View | What it tells you |
 |---|---|
-| **① Conversation flow** | The whole timeline: your task, the agent's replies, and every tool it runs |
+| **① Conversation flow** | The whole timeline: your task, the agent's replies **streaming in live**, every tool it runs, and the `💉 injected` system‑reminders the harness adds |
 | **② LLM calls** | Each model call — provider, model, latency, tokens in/out, cost. **Click any call to see the complete input and output** sent over the wire |
 | **③ Tool calls** | Every tool: name, arguments, result, duration, success/failure |
-| **④ Context usage** | How full the model's context window is getting |
+| **④ Plan (todo)** | The agent's live checklist via `todo_write` — watch it tick `[ ] → [~] → [x]` as it works |
 | **⑤ Multi‑agent tree** | When the main agent spawns sub‑agents, watch the tree grow |
 
-The killer feature: **click an LLM call and see the exact, complete request and response** — the system prompt, the full message history, the tool definitions, and the raw provider reply. It's the clearest way to *understand* what an agent really sends to a model on every turn.
+The killer feature: **click an LLM call and see the exact, complete request and response** — the system prompt, the full message history, the tool definitions, and the raw provider reply. With streaming on, you also see text and **tool‑call arguments assemble character‑by‑character** as they arrive. It's the clearest way to *understand* what an agent really exchanges with a model on every turn.
 
 ---
 
@@ -109,9 +109,9 @@ The whole thing is one idea: **an event bus is the spine.** The agent loop emits
 ```mermaid
 flowchart LR
     U[Your task] --> L[Agent loop]
-    L -->|build prompt| P[Provider<br/>Anthropic / DeepSeek / OpenAI]
-    P -->|text + tool calls| L
-    L -->|run| T[Tools<br/>files · shell · search · sub-agents]
+    L -->|build prompt + inject reminders| P[Provider<br/>Anthropic / DeepSeek / OpenAI]
+    P -->|streamed text + tool calls| L
+    L -->|run| T[Tools<br/>files · shell · search · web · todo · sub-agents]
     T -->|results| L
     L -.emit.-> B(((Event bus)))
     B --> TERM[Terminal]
@@ -119,7 +119,7 @@ flowchart LR
     B --> LOG[Session log]
 ```
 
-The core loop is a simple `while`: send the system prompt + history to the model → it replies with text and/or **tool calls** → run the tools → feed results back → repeat until it's done. A **sub‑agent is just the same loop running again** with a focused task. That's the entire "intelligence" — a good loop, a good set of tools, and a good prompt.
+The core loop is a simple `while`: inject any pending reminders → stream the system prompt + history to the model → it replies with text and/or **tool calls** → run the tools → feed results back → repeat until it's done. A **sub‑agent is just the same loop running again** with a focused task. That's the entire "intelligence" — a good loop, a good set of tools, good prompts, and a harness that keeps the model on track.
 
 📖 The best file to read is [`src/agent/loop.ts`](src/agent/loop.ts).
 
@@ -141,9 +141,12 @@ Type `/memory` to see what's loaded and where it lives.
 ```
 src/
   agent/loop.ts        ★ the reentrant agent loop (main + sub-agents)
+  agent/system-prompt.ts   tuned system prompt (tool discipline, todo, conventions)
+  agent/env-context.ts     startup git/cwd snapshot injected as a system-reminder
+  agent/compaction.ts      summarize old history when the window fills up
   events/              the event bus (spine) + typed events
-  providers/           Anthropic + OpenAI-compatible adapters, pricing/limits table
-  tools/               read/write/edit, bash (+ background), search, web_fetch, spawn sub-agent
+  providers/           Anthropic + OpenAI-compatible adapters (streaming), pricing/limits
+  tools/               read/write/edit, bash (+ background), search, web_fetch, todo, sub-agent
   ui/                  raw-mode line editor, key decoder, arrow-key picker, printer
   logging/             per-session .log + .jsonl recorder
   dashboard/           SSE server + vanilla-JS frontend (5 views + raw I/O modal)
@@ -159,10 +162,13 @@ Run the tests (no key required): `npm test`.
 
 - [x] Detect truncated tool calls + validate required tool args (no more junk writes)
 - [x] Context compaction when the window fills up
-- [ ] Streaming responses for token‑by‑token dashboard updates
+- [x] **Streaming responses** — token‑by‑token text and live tool‑call assembly
+- [x] **`todo_write`** plan tracking with a live dashboard panel
+- [x] **`<system-reminder>` injection** — the harness steers the model mid‑run (git status, todo state)
 - [x] Browse past session logs in the dashboard (replay)
 - [x] `web_fetch` tool — the agent can read the web
-- [ ] More tools (apply‑patch, web search)
+- [ ] Edit discipline — discourage whole‑file rewrites (SWE‑agent‑style ACI guardrails)
+- [ ] `web_search` tool + prompt caching
 
 Contributions welcome — pick anything above or open an issue. ⭐ a star helps a lot!
 

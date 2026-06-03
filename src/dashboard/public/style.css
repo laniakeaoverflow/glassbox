@@ -103,8 +103,25 @@ main {
 .tag.ok { color: var(--green); }
 .tag.err { color: var(--red); }
 .tag.agent { color: var(--purple); }
+.tag.todo { color: var(--cyan); }
+.tag.reminder { color: var(--purple); background: #2a1f3a; }
 .meta { color: var(--dim); font-size: 11px; }
 .txt { white-space: pre-wrap; word-break: break-word; }
+
+/* ④ 计划面板：todo 清单 */
+.todo-empty { color: var(--dim); font-size: 12px; padding: 6px 0; }
+.todo-item { display: flex; gap: 8px; padding: 4px 0; font-size: 13px; align-items: baseline; }
+.todo-item .mark { width: 14px; flex: none; text-align: center; }
+.todo-item.pending .mark { color: var(--dim); }
+.todo-item.in_progress .mark { color: var(--yellow); }
+.todo-item.completed .mark { color: var(--green); }
+.todo-item.completed .content { color: var(--dim); text-decoration: line-through; }
+
+/* 流式：逐字增长的行 + 闪烁光标 + 正在拼装的工具参数预览 */
+.row.streaming { background: #161b22; }
+.cursor { color: var(--cyan); animation: blink 1s step-start infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.forming { display: block; color: var(--yellow); font-size: 12px; white-space: pre-wrap; word-break: break-word; opacity: 0.8; }
 
 /* LLM 调用卡片 */
 .call { border: 1px solid var(--border); border-radius: 6px; margin-bottom: 8px; padding: 8px; }

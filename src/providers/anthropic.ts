@@ -1,7 +1,7 @@
 // Anthropic Messages API 适配器。
 // 我们的内部块格式几乎就是 Anthropic 原生格式，翻译最轻。
 import Anthropic from "@anthropic-ai/sdk";
-import type { Message, Tool, LLMResult } from "../types.js";
+import type { Message, Tool, LLMResult, StreamDelta } from "../types.js";
 import type { LLMProvider } from "./provider.js";
 import { maxOutput } from "./pricing.js";
 
@@ -12,7 +12,12 @@ export class AnthropicProvider implements LLMProvider {
     this.client = new Anthropic({ apiKey });
   }
 
-  async chat(systemPrompt: string, messages: Message[], tools: Tool[]): Promise<LLMResult> {
+  async chat(
+    systemPrompt: string,
+    messages: Message[],
+    tools: Tool[],
+    onDelta?: (d: StreamDelta) => void
+  ): Promise<LLMResult> {
     // 内部 Message -> Anthropic 消息：content 块逐个翻译。
     const apiMessages = messages.map((m) => ({
       role: m.role,
@@ -41,24 +46,48 @@ export class AnthropicProvider implements LLMProvider {
         input_schema: t.parameters as Anthropic.Tool.InputSchema,
       })),
     };
-    const res = await this.client.messages.create(request);
+    // 流式：边收边回调增量，结束后用 finalMessage() 拿到拼好的完整 Message，再走同一套翻译。
+    const res = onDelta
+      ? await this.streamMessage(request, onDelta)
+      : await this.client.messages.create(request);
 
-    // 响应翻回内部格式：text 块拼成文本，tool_use 块收成 toolCalls。
-    let text = "";
-    const toolCalls: LLMResult["toolCalls"] = [];
-    for (const block of res.content) {
-      if (block.type === "text") text += block.text;
-      else if (block.type === "tool_use")
-        toolCalls.push({ id: block.id, name: block.name, input: block.input as Record<string, unknown> });
-    }
-
-    return {
-      text,
-      toolCalls,
-      usage: { inputTokens: res.usage.input_tokens, outputTokens: res.usage.output_tokens },
-      stopReason: res.stop_reason ?? "",
-      raw: res,
-      rawRequest: request,
-    };
+    return toResult(res, request);
   }
+
+  /** 流式调用：转发增量给 onDelta，返回 SDK 拼好的最终 Message（形状同非流式响应）。 */
+  private async streamMessage(
+    request: Anthropic.MessageCreateParamsNonStreaming,
+    onDelta: (d: StreamDelta) => void
+  ): Promise<Anthropic.Message> {
+    const stream = this.client.messages.stream(request);
+    for await (const ev of stream) {
+      if (ev.type === "content_block_start" && ev.content_block.type === "tool_use") {
+        onDelta({ kind: "tool_start", toolIndex: ev.index, toolId: ev.content_block.id, toolName: ev.content_block.name });
+      } else if (ev.type === "content_block_delta") {
+        if (ev.delta.type === "text_delta") onDelta({ kind: "text", text: ev.delta.text });
+        else if (ev.delta.type === "input_json_delta")
+          onDelta({ kind: "tool_input", toolIndex: ev.index, partialJson: ev.delta.partial_json });
+      }
+    }
+    return stream.finalMessage();
+  }
+}
+
+/** 把 Anthropic 响应（流式拼好的 / 非流式的，形状一致）翻回内部 LLMResult。 */
+function toResult(res: Anthropic.Message, request: unknown): LLMResult {
+  let text = "";
+  const toolCalls: LLMResult["toolCalls"] = [];
+  for (const block of res.content) {
+    if (block.type === "text") text += block.text;
+    else if (block.type === "tool_use")
+      toolCalls.push({ id: block.id, name: block.name, input: block.input as Record<string, unknown> });
+  }
+  return {
+    text,
+    toolCalls,
+    usage: { inputTokens: res.usage.input_tokens, outputTokens: res.usage.output_tokens },
+    stopReason: res.stop_reason ?? "",
+    raw: res,
+    rawRequest: request,
+  };
 }

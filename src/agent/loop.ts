@@ -1,6 +1,6 @@
 // ★核心★ agent 循环。主 agent 和子 agent 共用这一个函数——
 // "子 agent 就是同一个循环再跑一遍"，只是换了 agentId 和聚焦的任务。
-import type { Message, Tool, ContentBlock } from "../types.js";
+import type { Message, Tool, ContentBlock, StreamDelta, ToolContext } from "../types.js";
 import type { LLMProvider } from "../providers/provider.js";
 import { costUsd, contextLimit } from "../providers/pricing.js";
 import { compact, shouldCompact } from "./compaction.js";
@@ -19,6 +19,10 @@ export interface LoopOptions {
   confirm: (req: { name: string; args: Record<string, unknown> }) => Promise<boolean>;
   /** 上下文压缩阈值（输入 token / 窗口大小 超过它就压缩）。默认 0.7。 */
   compactThreshold?: number;
+  /** 是否流式：传 onDelta 给 provider，把增量发成 llm_delta 事件。默认 true。 */
+  stream?: boolean;
+  /** 启动时注入给模型的 system-reminder（如 cwd/git 状态）。仅主 agent 传，子 agent 不带。 */
+  initialReminders?: { source: string; text: string }[];
 }
 
 export interface LoopResult {
@@ -46,6 +50,24 @@ export async function runLoop(opts: LoopOptions): Promise<LoopResult> {
 
   const messages: Message[] = [{ role: "user", content: [{ type: "text", text: task }] }];
 
+  // ③ system-reminder 注入通道（框架→LLM 转向）：工具/启动逻辑往 pending 里塞提醒，
+  // 每轮调用模型前 flush 进最后一条 user 消息，并发 reminder 事件让面板标出"这是框架塞的"。
+  const pending: { source: string; text: string }[] = [...(opts.initialReminders ?? [])];
+  const remind = (source: string, text: string) => pending.push({ source, text });
+  const flushReminders = () => {
+    if (!pending.length) return;
+    const drained = pending.splice(0); // 取出并清空
+    // 包成 <system-reminder> 块，追加到最后一条 user 消息（task 消息或 tool_result 消息）。
+    const blocks: ContentBlock[] = drained.map((r) => ({
+      type: "text",
+      text: `<system-reminder>\n${r.text}\n</system-reminder>`,
+    }));
+    const last = messages[messages.length - 1];
+    if (last && last.role === "user") last.content.push(...blocks);
+    else messages.push({ role: "user", content: blocks });
+    for (const r of drained) bus.emit({ type: "reminder", source: r.source, text: r.text, ...env() });
+  };
+
   // 接近上下文窗口就压缩历史。摘要调用本身的 token/成本也计入总账。
   const maybeCompact = async (inputTokens: number) => {
     if (!shouldCompact(inputTokens, contextLimit(provider.model), opts.compactThreshold ?? 0.7)) return;
@@ -61,10 +83,14 @@ export async function runLoop(opts: LoopOptions): Promise<LoopResult> {
 
   try {
     for (turn = 1; turn <= maxTurns; turn++) {
+      flushReminders(); // 把待注入的 system-reminder 拼进最后一条 user 消息，再调模型
       bus.emit({ type: "llm_request", provider: provider.name, model: provider.model, messageCount: messages.length, ...env() });
 
       const t0 = Date.now();
-      const res = await provider.chat(systemPrompt, messages, tools);
+      // 流式：把增量发成 llm_delta 事件（终端/面板据此实时渲染）。最终结果仍由返回的 LLMResult 决定。
+      const onDelta =
+        opts.stream === false ? undefined : (d: StreamDelta) => bus.emit({ type: "llm_delta", ...d, ...env() });
+      const res = await provider.chat(systemPrompt, messages, tools, onDelta);
       const latencyMs = Date.now() - t0;
 
       totalIn += res.usage.inputTokens;
@@ -120,7 +146,7 @@ export async function runLoop(opts: LoopOptions): Promise<LoopResult> {
       // 执行所有工具调用，结果回灌（每个 tool_call 必须有配对结果，出错也要回）。
       const resultBlocks: ContentBlock[] = [];
       for (const call of res.toolCalls) {
-        resultBlocks.push(await runTool(call, byName, { agentId, depth: opts.depth }, confirm, env));
+        resultBlocks.push(await runTool(call, byName, { agentId, depth: opts.depth, remind }, confirm, env));
       }
       messages.push({ role: "user", content: resultBlocks });
 
@@ -145,7 +171,7 @@ export async function runLoop(opts: LoopOptions): Promise<LoopResult> {
 async function runTool(
   call: { id: string; name: string; input: Record<string, unknown> },
   byName: Map<string, Tool>,
-  ctx: { agentId: string; depth: number },
+  ctx: ToolContext,
   confirm: LoopOptions["confirm"],
   env: () => { agentId: string; parentAgentId?: string; turn: number }
 ): Promise<ContentBlock> {

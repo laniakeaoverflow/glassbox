@@ -10,10 +10,10 @@ const I18N = {
     statModel: "Provider / Model", statTurn: "轮数 (turn)", statTok: "累计 token", statCost: "累计成本",
     statCtx: "上下文占用（最近一次调用）",
     panelTimeline: "① 对话流", panelLlm: "② LLM 调用", panelLlmHint: "点开看原始报文 → 对比 provider",
-    panelTools: "③ 工具调用", panelTree: "⑤ 多 Agent 协作树",
+    panelTools: "③ 工具调用", panelTodo: "④ 计划 (todo)", panelTree: "⑤ 多 Agent 协作树",
     connConnecting: "连接中…", connOn: "● 已连接", connOff: "○ 断开，重连中…",
     tagTask: "任务", tagAssistant: "助手", tagTool: "工具", tagSpawn: "派生", tagEnd: "结束",
-    tagCompact: "🗜 压缩", tagError: "错误",
+    tagCompact: "🗜 压缩", tagError: "错误", tagReminder: "💉 注入", todoEmpty: "（暂无计划）",
     llmOpen: "🔍 点击查看完整输入 / 输出", toolRunning: "运行中…",
     compactMeta: "上下文 {a} → {b} 条消息",
     modalTitle: "第 {n} 次调用", modalTools: "模型可用工具",
@@ -28,10 +28,10 @@ const I18N = {
     statModel: "Provider / Model", statTurn: "Turns", statTok: "Total tokens", statCost: "Total cost",
     statCtx: "Context usage (last call)",
     panelTimeline: "① Conversation", panelLlm: "② LLM calls", panelLlmHint: "click a call → compare providers",
-    panelTools: "③ Tool calls", panelTree: "⑤ Multi-agent tree",
+    panelTools: "③ Tool calls", panelTodo: "④ Plan (todo)", panelTree: "⑤ Multi-agent tree",
     connConnecting: "Connecting…", connOn: "● Connected", connOff: "○ Disconnected, reconnecting…",
     tagTask: "Task", tagAssistant: "Assistant", tagTool: "Tool", tagSpawn: "Spawn", tagEnd: "End",
-    tagCompact: "🗜 Compact", tagError: "Error",
+    tagCompact: "🗜 Compact", tagError: "Error", tagReminder: "💉 Injected", todoEmpty: "(no plan yet)",
     llmOpen: "🔍 click to see full input / output", toolRunning: "running…",
     compactMeta: "context {a} → {b} messages",
     modalTitle: "Call #{n}", modalTools: "tools",
@@ -78,8 +78,10 @@ let totalIn = 0, totalOut = 0, totalCost = 0, maxTurn = 0, lastModel = "—";
 const agents = {};
 const toolEls = {};
 const llmCalls = [];
+// 流式状态：按 agentId 存当前正在「逐字增长」的那条 assistant 行 + 正在拼装的工具调用占位。
+const streamRows = {};
 
-const timeline = $("timeline"), llm = $("llm"), tools = $("tools"), tree = $("tree");
+const timeline = $("timeline"), llm = $("llm"), tools = $("tools"), tree = $("tree"), todo = $("todo");
 
 function autoscroll(el) {
   if (el.scrollHeight - el.scrollTop - el.clientHeight < 60) el.scrollTop = el.scrollHeight;
@@ -114,6 +116,29 @@ function renderTree() {
   roots.forEach((r) => draw(r, 0));
 }
 
+// 把一条流式行定稿：去光标、去「拼装中」的工具占位、填最终正文（纯工具回合无正文则整行移除）。
+function finalizeStream(st, finalText) {
+  if (st.cursor) st.cursor.remove();
+  for (const k in st.tools) st.tools[k].span.remove();
+  const txt = (finalText || "").trim();
+  st.txt.textContent = txt;
+  st.row.classList.remove("streaming");
+  if (!txt) st.row.remove();
+}
+
+// ④ 计划面板：每次 todo_update 全量重画当前清单（latest wins）。
+function renderTodos(todos) {
+  todo.innerHTML = "";
+  if (!todos || !todos.length) { todo.innerHTML = `<div class="todo-empty">${t("todoEmpty")}</div>`; return; }
+  for (const it of todos) {
+    const div = document.createElement("div");
+    div.className = "todo-item " + esc(it.status);
+    const mark = it.status === "completed" ? "☑" : it.status === "in_progress" ? "◐" : "☐";
+    div.innerHTML = `<span class="mark">${mark}</span><span class="content">${esc(it.content)}</span>`;
+    todo.appendChild(div);
+  }
+}
+
 function handle(e) {
   const sub = !!e.parentAgentId;
   maxTurn = Math.max(maxTurn, e.turn || 0);
@@ -126,14 +151,46 @@ function handle(e) {
       renderTree();
       break;
 
+    case "llm_delta": {
+      // 取/建本回合的流式行：文本逐字增长，工具调用参数 JSON 一点点拼出来。
+      let st = streamRows[e.agentId];
+      if (!st || st.turn !== e.turn) {
+        const row = addRow(timeline, `<span class="tag assistant" data-i18n="tagAssistant"></span><span class="txt"></span><span class="cursor">▍</span>`, sub);
+        row.classList.add("streaming");
+        st = streamRows[e.agentId] = { turn: e.turn, row, txt: row.querySelector(".txt"), cursor: row.querySelector(".cursor"), text: "", tools: {} };
+      }
+      if (e.kind === "text") {
+        st.text += e.text || "";
+        st.txt.textContent = st.text;
+        autoscroll(timeline);
+      } else if (e.kind === "tool_start") {
+        const span = document.createElement("span");
+        span.className = "forming";
+        st.tools[e.toolIndex] = { span, name: e.toolName || "", json: "" };
+        span.textContent = `→ ${e.toolName || ""}(`;
+        st.row.insertBefore(span, st.cursor);
+        autoscroll(timeline);
+      } else if (e.kind === "tool_input") {
+        const tl = st.tools[e.toolIndex];
+        if (tl) { tl.json += e.partialJson || ""; tl.span.textContent = `→ ${tl.name}(${tl.json}`; autoscroll(timeline); }
+      }
+      break;
+    }
+
     case "llm_response": {
       totalIn += e.inputTokens; totalOut += e.outputTokens; totalCost += e.costUsd;
       lastModel = `${e.provider} / ${e.model}`;
       const pct = Math.min(100, (e.inputTokens / e.contextLimit) * 100);
       $("ctx-bar").style.width = pct + "%";
       $("ctx-text").textContent = `${e.inputTokens.toLocaleString()} / ${e.contextLimit.toLocaleString()} tok (${pct.toFixed(1)}%)`;
-      if (e.text && e.text.trim())
+      const st = streamRows[e.agentId];
+      if (st && st.turn === e.turn) {
+        // 流式收尾：定稿正文、去掉光标和「拼装中」的工具占位（正式 tool_start 行随后会出现）。
+        finalizeStream(st, e.text);
+        delete streamRows[e.agentId];
+      } else if (e.text && e.text.trim()) {
         addRow(timeline, `<span class="tag assistant" data-i18n="tagAssistant"></span><span class="txt">${esc(e.text.trim())}</span>`, sub);
+      }
 
       const idx = llmCalls.push(e) - 1;
       const card = document.createElement("div");
@@ -181,10 +238,23 @@ function handle(e) {
       renderTree();
       break;
 
-    case "conversation_end":
+    case "conversation_end": {
+      const st = streamRows[e.agentId]; // 兜底：流式中途出错没等到 llm_response，这里收尾
+      if (st) { finalizeStream(st, st.text); delete streamRows[e.agentId]; }
       if (agents[e.agentId]) agents[e.agentId].state = "done";
       if (!sub) addRow(timeline, `<span class="tag ${e.ok ? "ok" : "err"}" data-i18n="tagEnd"></span><span class="meta">in ${e.totalInputTokens} / out ${e.totalOutputTokens} tok · $${e.totalCostUsd.toFixed(5)}</span>`);
       renderTree();
+      break;
+    }
+
+    case "todo_update":
+      renderTodos(e.todos);
+      addRow(timeline, `<span class="tag todo" data-i18n="panelTodo"></span><span class="meta">${e.todos.filter((x) => x.status === "completed").length}/${e.todos.length}</span>`, sub);
+      break;
+
+    case "reminder":
+      // 框架注入的 system-reminder：用专门的标签+颜色,一眼区分"这不是用户/模型说的,是 harness 塞的"。
+      addRow(timeline, `<span class="tag reminder" data-i18n="tagReminder"></span><span class="meta">[${esc(e.source)}]</span> <span class="txt">${esc(short(e.text, 240))}</span>`, sub);
       break;
 
     case "compaction":
